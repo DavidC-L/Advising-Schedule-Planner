@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advisor Dashboard - Advising Schedule Planner</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <button class="logout-btn" onclick="sessionStorage.clear(); window.location.href='login.html';">
+        Log Out
+    </button>
+
+    <h1>Advisor Dashboard</h1>
+    <h3 id="welcome"></h3>
+
+    <div class="main-container">
+        <div class="queue-box">
+            <h3>Student Queue</h3>
+
+            <!-- Search + filter controls -->
+            <input id="searchBox" type="text" placeholder="Search by student name...">
+
+            <select id="priorityFilter">
+                <option value="all">All Priorities</option>
+                <option value="1">Graduating Senior</option>
+                <option value="2">Registration Issue</option>
+                <option value="3">Regular Advising</option>
+            </select>
+
+            <ul id="queueList"></ul>
+        </div>
+    </div>
+
+    <script src="advisor.js"></script>
+</body>
+</html>
