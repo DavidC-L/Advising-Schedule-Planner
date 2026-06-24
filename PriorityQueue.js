@@ -10,25 +10,25 @@
  */
 class PriorityQueue {
     constructor() {
-        this.heap = [];
-        this.insertionCounter = 0;  // tracks order for tie-breaking
+    this.heap = [];
     }
 
     // ---------- PUBLIC METHODS ----------
 
     /**
-     * Add an appointment to the queue.
-     * @param {Object} appointment - any object with a `priority` field (1, 2, or 3)
-     */
+ * Compare two nodes. Returns negative if a should come before b.
+ * Primary: lower priority value first.
+ * Tiebreaker: earlier appointment time first.
+ */
     enqueue(appointment) {
-        const node = {
-            data: appointment,
-            priority: appointment.priority,
-            order: this.insertionCounter++
-        };
-        this.heap.push(node);
-        this._bubbleUp(this.heap.length - 1);
-    }
+    const node = {
+        data: appointment,
+        priority: appointment.priority,
+        appointmentTime: new Date(appointment.appointment_time).getTime()
+    };
+    this.heap.push(node);
+    this._bubbleUp(this.heap.length - 1);
+}
 
     /**
      * Remove and return the highest-priority appointment.
@@ -77,7 +77,6 @@ class PriorityQueue {
         // Clone the heap, repeatedly dequeue the copy
         const copy = new PriorityQueue();
         copy.heap = this.heap.map(node => ({ ...node }));
-        copy.insertionCounter = this.insertionCounter;
 
         const result = [];
         while (!copy.isEmpty()) {
@@ -94,11 +93,12 @@ class PriorityQueue {
      * Tiebreaker: earlier insertion order first.
      */
     _compare(a, b) {
-        if (a.priority !== b.priority) {
-            return a.priority - b.priority;
-        }
-        return a.order - b.order;
+    if (a.priority !== b.priority) {
+        return a.priority - b.priority;
     }
+    // Tiebreaker: within the same priority level, earliest appointment time first
+    return a.appointmentTime - b.appointmentTime;
+}
 
     _bubbleUp(index) {
         while (index > 0) {
