@@ -1,138 +1,133 @@
 /**
- * Min-Heap Priority Queue
+ * Min-Heap Priority Queue (reusable via a pluggable comparator)
  *
- * Lower priority value = higher importance (served first):
- *   1 = Graduating Senior
- *   2 = Registration Issue
- *   3 = Regular Advising
+ * Default ordering (appointments): lower priority value = served first
+ *   1 = Graduating Senior, 2 = Registration Issue, 3 = Regular Advising
+ *   ties broken by earliest appointment time.
  *
- * Ties in priority are broken by insertion order (first-come, first-served).
+ * Pass a custom comparator to reuse the same heap for other orderings
+ * (e.g. ordering students by school year).
  */
 class PriorityQueue {
-    constructor() {
-    this.heap = [];
-    }
-
-    // ---------- PUBLIC METHODS ----------
-
     /**
- * Compare two nodes. Returns negative if a should come before b.
- * Primary: lower priority value first.
- * Tiebreaker: earlier appointment time first.
- */
-    enqueue(appointment) {
-    const node = {
-        data: appointment,
-        priority: appointment.priority,
-        appointmentTime: new Date(appointment.appointment_time).getTime()
-    };
-    this.heap.push(node);
-    this._bubbleUp(this.heap.length - 1);
-}
-
-    /**
-     * Remove and return the highest-priority appointment.
-     * @returns {Object|null} the appointment, or null if queue is empty
+     * @param {function} [compareFn] comparator over enqueued items;
+     *        returns a negative number if a should come out before b.
      */
+    constructor(compareFn) {
+        this.heap = [];
+        this._compareFn = compareFn || PriorityQueue.appointmentCompare;
+    }
+ 
+    // Default comparator: by priority, then first-come-first-served
+    static appointmentCompare(a, b) {
+        if (a.priority !== b.priority) return a.priority - b.priority;
+        return a.appointment_id - b.appointment_id; // lower id = created first
+    }
+ 
+    // ---------- PUBLIC METHODS ----------
+ 
+    enqueue(item) {
+        this.heap.push(item);
+        this._bubbleUp(this.heap.length - 1);
+    }
+ 
     dequeue() {
         if (this.heap.length === 0) return null;
-
+ 
         const top = this.heap[0];
         const last = this.heap.pop();
-
+ 
         if (this.heap.length > 0) {
             this.heap[0] = last;
             this._sinkDown(0);
         }
-
-        return top.data;
+        return top;
     }
-
+ 
     /**
-     * Look at the next appointment without removing it.
+     * Remove a specific appointment by its ID, wherever it sits in the heap.
+     * Returns true if removed, false if not found.
      */
+    remove(appointmentId) {
+        const index = this.heap.findIndex(item => item.appointment_id === appointmentId);
+        if (index === -1) return false;
+ 
+        const last = this.heap.pop();
+        if (index < this.heap.length) {
+            this.heap[index] = last;
+            this._bubbleUp(index);
+            this._sinkDown(index);
+        }
+        return true;
+    }
+ 
     peek() {
-        return this.heap.length > 0 ? this.heap[0].data : null;
+        return this.heap.length > 0 ? this.heap[0] : null;
     }
-
-    /**
-     * Number of appointments in the queue.
-     */
+ 
     size() {
         return this.heap.length;
     }
-
-    /**
-     * True if queue is empty.
-     */
+ 
     isEmpty() {
         return this.heap.length === 0;
     }
-
+ 
     /**
-     * Return all appointments in priority order without modifying the queue.
-     * Useful for displaying the queue to advisors/students.
+     * Return all items in priority order without modifying this queue.
      */
     toSortedArray() {
-        // Clone the heap, repeatedly dequeue the copy
-        const copy = new PriorityQueue();
-        copy.heap = this.heap.map(node => ({ ...node }));
-
+        const copy = new PriorityQueue(this._compareFn);
+        copy.heap = this.heap.slice();   // shallow copy of references
+ 
         const result = [];
         while (!copy.isEmpty()) {
             result.push(copy.dequeue());
         }
         return result;
     }
-
+ 
     // ---------- INTERNAL HEAP OPERATIONS ----------
-
-    /**
-     * Compare two nodes. Returns negative if a should come before b.
-     * Primary: lower priority value first.
-     * Tiebreaker: earlier insertion order first.
-     */
+ 
     _compare(a, b) {
-    if (a.priority !== b.priority) {
-        return a.priority - b.priority;
+        return this._compareFn(a, b);
     }
-    // Tiebreaker: within the same priority level, earliest appointment time first
-    return a.appointmentTime - b.appointmentTime;
-}
-
+ 
     _bubbleUp(index) {
         while (index > 0) {
             const parentIndex = Math.floor((index - 1) / 2);
             if (this._compare(this.heap[index], this.heap[parentIndex]) < 0) {
-                [this.heap[index], this.heap[parentIndex]] = [this.heap[parentIndex], this.heap[index]];
+                [this.heap[index], this.heap[parentIndex]] =
+                    [this.heap[parentIndex], this.heap[index]];
                 index = parentIndex;
             } else {
                 break;
             }
         }
     }
-
+ 
     _sinkDown(index) {
         const length = this.heap.length;
-
+ 
         while (true) {
             const leftIndex = 2 * index + 1;
             const rightIndex = 2 * index + 2;
             let smallest = index;
-
+ 
             if (leftIndex < length && this._compare(this.heap[leftIndex], this.heap[smallest]) < 0) {
                 smallest = leftIndex;
             }
             if (rightIndex < length && this._compare(this.heap[rightIndex], this.heap[smallest]) < 0) {
                 smallest = rightIndex;
             }
-
+ 
             if (smallest === index) break;
-
-            [this.heap[index], this.heap[smallest]] = [this.heap[smallest], this.heap[index]];
+ 
+            [this.heap[index], this.heap[smallest]] =
+                [this.heap[smallest], this.heap[index]];
             index = smallest;
         }
     }
 }
-
+ 
 module.exports = PriorityQueue;
