@@ -2,13 +2,14 @@
 if (!sessionStorage.getItem("userEmail")) {
     window.location.href = "login.html";
 }
+document.getElementById("sortOrder").addEventListener("change", renderQueue);
 
 // Optional: auto-fill name & email from session
 window.addEventListener("DOMContentLoaded", () => {
     const name = sessionStorage.getItem("userName");
     const email = sessionStorage.getItem("userEmail");
-    if (name) document.getElementById("studentName").value = name;
-    if (email) document.getElementById("studentEmail").value = email;
+    if (name) document.getElementById("studentName").textContent = name;
+    if (email) document.getElementById("studentEmail").textContent = email;
 });
 
 const form = document.getElementById("appointmentForm");
@@ -17,8 +18,7 @@ form.addEventListener("submit", async (event) => {
     event.preventDefault();
 
     const appointment = {
-        studentName: document.getElementById("studentName").value,
-        studentEmail: document.getElementById("studentEmail").value,
+        studentEmail: sessionStorage.getItem("userEmail"),
         advisorName: document.getElementById("advisor").value,
         appointmentTime: document.getElementById("appointmentTime").value,
         priority: document.getElementById("priority").value
@@ -40,8 +40,10 @@ form.addEventListener("submit", async (event) => {
 
         alert(result.message);
 
-        form.reset();
-        loadQueue();
+        if (response.ok) {
+            form.reset();
+            loadQueue();
+        }
 
     } catch (error) {
         console.error(error);
@@ -50,34 +52,50 @@ form.addEventListener("submit", async (event) => {
 });
 
 
+let queueAppointments = [];
+
 async function loadQueue() {
     try {
         const response = await fetch("http://localhost:3000/appointments");
-        const appointments = await response.json();
-
-        const queueList = document.getElementById("queueList");
-        queueList.innerHTML = "";
-
-        if (appointments.length === 0) {
-            queueList.innerHTML = "<li>No appointments in queue.</li>";
-            return;
-        }
-
-        const priorityLabels = {
-            1: "Graduating Senior",
-            2: "Registration Issue",
-            3: "Regular Advising"
-        };
-
-        appointments.forEach((apt, index) => {
-            const li = document.createElement("li");
-            const time = new Date(apt.appointment_time).toLocaleString();
-            li.textContent = `${index + 1}. ${apt.student_name} → ${apt.advisor_name} at ${time} (${priorityLabels[apt.priority]})`;
-            queueList.appendChild(li);
-        });
+        queueAppointments = await response.json();
+        renderQueue();
     } catch (error) {
         console.error("Failed to load queue:", error);
     }
+}
+
+function renderQueue() {
+    const queueList = document.getElementById("queueList");
+    queueList.innerHTML = "";
+
+    if (queueAppointments.length === 0) {
+        queueList.innerHTML = "<li>No appointments in queue.</li>";
+        return;
+    }
+
+    const priorityLabels = {
+        1: "Graduating Senior",
+        2: "Registration Issue",
+        3: "Regular Advising"
+    };
+
+    // Work on a copy so the server's original order is never mutated
+    const sortOrder = document.getElementById("sortOrder").value;
+    const list = queueAppointments.slice();
+
+    if (sortOrder === "time") {
+        list.sort((a, b) =>
+            new Date(a.appointment_time) - new Date(b.appointment_time));
+    }
+    // else "priority": leave as-is — the server already returns
+    // priority + FCFS order.
+
+    list.forEach((apt, index) => {
+        const li = document.createElement("li");
+        const time = new Date(apt.appointment_time).toLocaleString();
+        li.textContent = `${index + 1}. ${apt.student_name} → ${apt.advisor_name} at ${time} (${priorityLabels[apt.priority]})`;
+        queueList.appendChild(li);
+    });
 }
 
 async function loadAdvisors() {

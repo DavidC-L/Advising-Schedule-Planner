@@ -31,11 +31,11 @@
 
         <form id="appointmentForm">
 
-            <label>Name:</label><br>
-            <input id="studentName" type="text" placeholder="Enter your name" required><br><br>
+            <label>Name:</label>
+                <p id="studentName" class="readonly-field"></p>
 
-            <label>Email:</label><br>
-            <input id="studentEmail" type="email" placeholder="Enter your email" required><br><br>
+            <label>Email:</label>
+                <p id="studentEmail" class="readonly-field"></p>
 
             <label>Advisor:</label><br>
             <select id="advisor" required>
@@ -60,8 +60,14 @@
 
         <div class="queue-box">
             <h3>Queue List</h3>
-            <ul id="queueList"></ul>
-        </div>
+
+            <select id="sortOrder">
+                <option value="time">Sort: Appointment time (soonest first)</option>
+                <option value="priority">Sort: Priority (serving order)</option>
+        </select>
+
+        <ul id="queueList"></ul>
+    </div>
 
     </div>
 

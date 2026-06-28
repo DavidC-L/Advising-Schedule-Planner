@@ -7,32 +7,53 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
+ 
     <button class="logout-btn" onclick="sessionStorage.clear(); window.location.href='login.html';">
         Log Out
     </button>
-
+ 
     <h1>Advisor Dashboard</h1>
     <h3 id="welcome"></h3>
-
+ 
     <div class="main-container">
+ 
+        <!-- Auto-assign panel -->
+        <div class="queue-box">
+            <h3>Auto-Assign Advising</h3>
+            <p style="text-align:left; margin-top:0;">
+                Assigns all unscheduled students to the earliest open slots,
+                highest school year first, with no overlaps.
+            </p>
+ 
+            <label>Advisor:</label><br>
+            <select id="assignAdvisor"></select>
+ 
+            <label>Date:</label><br>
+            <input id="assignDate" type="date">
+ 
+            <button id="autoAssignBtn" type="button">Auto-Assign Students</button>
+ 
+            <ul id="assignResult"></ul>
+        </div>
+ 
+        <!-- Live queue + search/filter + cancel -->
         <div class="queue-box">
             <h3>Student Queue</h3>
-
-            <!-- Search + filter controls -->
+ 
             <input id="searchBox" type="text" placeholder="Search by student name...">
-
+ 
             <select id="priorityFilter">
                 <option value="all">All Priorities</option>
                 <option value="1">Graduating Senior</option>
                 <option value="2">Registration Issue</option>
                 <option value="3">Regular Advising</option>
             </select>
-
+ 
             <ul id="queueList"></ul>
         </div>
+ 
     </div>
-
+ 
     <script src="advisor.js"></script>
 </body>
 </html>
